@@ -38,7 +38,19 @@ class Box:
         )
 
     def open_box(self):
+        if self.is_flag or not game:
+            return
         if self.is_open:
+            sp_around = get_arround(self.__row, self.__col)
+            count = 0
+            for r, c in sp_around:
+                count += 1 if btns[r][c].is_flag else 0
+
+            if str(self.__bt["text"]) != str(count):
+                return
+            for r, c in sp_around:
+                if not btns[r][c].is_open:
+                    btns[r][c].open_box()
             return
         self.is_open = True
         box = [self.__row, self.__col]
@@ -56,12 +68,12 @@ class Box:
             return
         box = [self.__row, self.__col]
 
-        if self.is_flag: # remove
+        if self.is_flag:  # remove
             self.__bt["image"] = ""
             self.is_flag = False
             lb_flags.plus()
             spf.remove(box)
-        elif not lb_flags.is_empty: # add
+        elif not lb_flags.is_empty:  # add
             self.flag()
             lb_flags.minus()
             spf.append(box)
@@ -163,11 +175,23 @@ class Timer:
             return
         tk.after(1000, self.__timer)
 
+
+def get_arround(row: int, col: int):
+    # @formatter:off
+    return [
+        [row - 1, col - 1], [row - 1, col], [row - 1, col + 1],
+        [row,     col - 1],                 [row,     col + 1],
+        [row + 1, col - 1], [row + 1, col], [row + 1, col + 1],
+    ]
+    # @formatter:on
+
+
 def check():
     global game
     if sorted(spf) == sorted(spb):
         game = False
         bt_main.win()
+
 
 def randomizer():
     # бомбы
@@ -189,13 +213,9 @@ def randomizer():
             if [r, c] in spb:
                 line.append('b')
                 continue
-            sp3 = [
-                [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
-                [r, c - 1], [r, c + 1],
-                [r + 1, c - 1], [r + 1, c], [r + 1, c + 1],
-            ]
+            sp_around = get_arround(r, c)
             d1 = 0
-            for d in sp3:
+            for d in sp_around:
                 if d in spb:
                     d1 += 1
             if d1 == 0:
@@ -206,12 +226,8 @@ def randomizer():
 
 
 def opening_space(r, c):
-    sp3 = [
-        [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
-        [r, c - 1], [r, c + 1],
-        [r + 1, c - 1], [r + 1, c], [r + 1, c + 1],
-    ]
-    for r, c in sp3:
+    sp_around = get_arround(r, c)
+    for r, c in sp_around:
         if not (0 <= r <= 9) or not (0 <= c <= 9): continue
 
         bt = btns[r][c]
@@ -279,6 +295,7 @@ cur_sess = 1
 tk.geometry('500x688')
 tk.bind('<Configure>', window_size)
 tk.iconbitmap("imgs/sapper.ico")
+
 
 # endregion
 
